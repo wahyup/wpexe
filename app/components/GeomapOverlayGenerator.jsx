@@ -416,13 +416,38 @@ export default function GeomapOverlayGenerator() {
     customBgColor, customTextColor, customAccentColor,
   ]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!canvasRef.current) return;
-    const link = document.createElement('a');
+    setIsProcessing(true);
+
+    const canvas = canvasRef.current;
+    const targetBytes = 2 * 1024 * 1024; // ~2 MB
+    const toBlob = (quality) =>
+      new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+
+    // Cari kualitas JPEG tertinggi yang masih menghasilkan file <= ~2 MB
+    let quality = 0.92;
+    let blob = await toBlob(quality);
+    let steps = 0;
+    while (blob && blob.size > targetBytes && quality > 0.35 && steps < 12) {
+      quality -= 0.07;
+      blob = await toBlob(quality);
+      steps += 1;
+    }
+
+    if (!blob) {
+      setIsProcessing(false);
+      return;
+    }
+
     const safeTitle = (title || 'geomap-overlay').trim().replace(/\s+/g, '-').toLowerCase();
-    link.download = `${safeTitle}-${date}.png`;
-    link.href = canvasRef.current.toDataURL('image/png');
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `${safeTitle}-${date}.jpg`;
+    link.href = url;
     link.click();
+    URL.revokeObjectURL(url);
+    setIsProcessing(false);
   };
 
   return (
