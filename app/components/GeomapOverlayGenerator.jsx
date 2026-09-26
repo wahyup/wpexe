@@ -108,7 +108,7 @@ export default function GeomapOverlayGenerator() {
   // Overlay Layout & Styling States
   const [overlayPosition, setOverlayPosition] = useState('bottom-left'); // 'bottom-left', 'bottom-right', 'top-left', 'top-right'
   const [themeColor, setThemeColor] = useState('dark'); // 'dark', 'light', 'amber', 'red', 'emerald', 'cyber', 'blueprint', 'glass', 'custom'
-  const [overlayScale, setOverlayScale] = useState(130); // Overlay manual scale (50% - 250%)
+  const [overlayScale, setOverlayScale] = useState(205); // Overlay manual scale (50% - 250%)
   const [cardOpacity, setCardOpacity] = useState(85); // Card Opacity (20% - 100%)
   const [cardRadius, setCardRadius] = useState(12); // Corner radius (0 - 24)
 
@@ -126,7 +126,7 @@ export default function GeomapOverlayGenerator() {
 
   useEffect(() => {
     setMainImage(createSampleImage('Pilih / Ambil Foto Utama', '#1e293b', '#cbd5e1'));
-    setThumbImage(createSampleImage('MAP THUMBNAIL', '#0284c7', '#ffffff'));
+    setThumbImage('/peta-default.jpg'); // Thumbnail peta default
   }, []);
 
   const handleGetLocation = () => {
@@ -704,10 +704,10 @@ export default function GeomapOverlayGenerator() {
                 <label className="text-xs font-semibold text-slate-300">Ukuran Scale ({overlayScale}%)</label>
                 <button
                   type="button"
-                  onClick={() => setOverlayScale(130)}
+                  onClick={() => setOverlayScale(205)}
                   className="text-[10px] text-slate-400 hover:text-emerald-400 transition cursor-pointer"
                 >
-                  Reset (130%)
+                  Reset (205%)
                 </button>
               </div>
               <input
