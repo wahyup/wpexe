@@ -789,6 +789,11 @@ export default function GeomapOverlayGenerator() {
             </div>
           </div>
         </div>
+        <div className="lg:col-span-7 flex flex-col items-center">
+          <p className="text-sm text-slate-400 mt-1">
+            ©2026 oleh mas kiting
+          </p>
+        </div>
         
       </div>
     </div>
