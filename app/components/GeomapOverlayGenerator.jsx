@@ -459,7 +459,7 @@ export default function GeomapOverlayGenerator() {
             WP.EXE GEOMAP
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Minima push rank sampe immo
+            "Minimal push rank sampe immo"
           </p>
         </div>
       </header>
