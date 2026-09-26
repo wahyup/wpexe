@@ -459,7 +459,7 @@ export default function GeomapOverlayGenerator() {
             WP.EXE GEOMAP
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Tambahkan watermark overlay lokasi, koordinat, thumbnail, dan timestamp pada foto Anda.
+            
           </p>
         </div>
       </header>
@@ -789,7 +789,7 @@ export default function GeomapOverlayGenerator() {
             </div>
           </div>
         </div>
-
+        
       </div>
     </div>
   );
