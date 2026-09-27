@@ -1,13 +1,27 @@
-{
-  "background_color": "#ffffff",
-  "description": "Tambahkan watermark overlay lokasi, koordinat, thumbnail, dan timestamp pada foto Anda.",
-  "dir": "ltr",
-  "display": "standalone",
-  "name": "wpexe",
-  "orientation": "any",
-  "scope": "/",
-  "short_name": "wp.exe",
-  "start_url": "/",
-  "theme_color": "#ffffff",
-  "id": "wp.exe.geocam"
+import type { MetadataRoute } from 'next'
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'GeoCamera',
+    short_name: 'wp.exe',
+    description: 'Deskripsi singkat aplikasi Next.js Anda',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#ffffff',
+    theme_color: '#000000',
+    icons: [
+      {
+        src: '/icons/icon-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/icons/icon-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+    ],
+  }
 }
