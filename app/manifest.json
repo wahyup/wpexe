@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "description": "Tambahkan watermark overlay lokasi, koordinat, thumbnail, dan timestamp pada foto Anda.",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "wpexe",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "wp.exe",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "id": "wp.exe.geocam"
+}
