@@ -456,10 +456,10 @@ export default function GeomapOverlayGenerator() {
       <header className="max-w-7xl mx-auto mb-8 flex flex-col items-center justify-center text-center border-b border-slate-800 pb-5">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-500">
-            WP.EXE GEOMAP
+            WP.EXE GEOMAP GENERATOR
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            "Minimal push rank sampe immo"
+            
           </p>
         </div>
       </header>
@@ -787,13 +787,12 @@ export default function GeomapOverlayGenerator() {
                 <DownloadIcon /> Simpan & Download Gambar
               </button>
             </div>
+            <p className="text-sm text-slate-400 mt-1">
+            ©2026 dibuat oleh mas kiting
+          </p>
           </div>
         </div>
-        <div className="lg:col-span-7 flex flex-col items-center">
-          <p className="text-sm text-slate-400 mt-1">
-            ©2026 oleh mas kiting
-          </p>
-        </div>
+        
         
       </div>
     </div>
