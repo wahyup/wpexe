@@ -604,7 +604,7 @@ export default function GeomapOverlayGenerator() {
           </h1>
           <AnimatedTitle
   text="Minimal Push Rank !!!"
-  className="text-2xl md:text-3xl font-extrabold"
+  className="text-sm font-extrabold"
 />
         </div>
       </header>
