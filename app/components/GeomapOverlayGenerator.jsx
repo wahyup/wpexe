@@ -791,13 +791,15 @@ export default function GeomapOverlayGenerator() {
                 <DownloadIcon /> Download Gambar
               </button>
             </div>
-            <p className="text-sm text-slate-400 mt-1">
-            ©2026 dibuat oleh mas kiting
-          </p>
+      
           </div>
         </div>
-        
-        
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <AnimatedTitle
+  text="©2026 Oleh mas kiting"
+  className="text-sm font-extrabold"
+/>
+        </div>
       </div>
 
       {/* Menu Setting: Tema & Slide */}
