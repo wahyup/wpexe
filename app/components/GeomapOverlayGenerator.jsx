@@ -598,6 +598,11 @@ export default function GeomapOverlayGenerator() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-4 md:p-8">
       {/* Header */}
       <header className="max-w-7xl mx-auto mb-8 flex flex-col items-center justify-center text-center border-b border-slate-800 pb-5">
+          <img
+          src="/maskable-512x512.png"
+          alt="Logo WP.EXE Geomap Generator"
+          className="w-16 h-16 md:w-24 md:h-24 rounded-2xl object-cover border-2 border-emerald-500/60 shadow-lg shadow-emerald-950/50 shrink-0"
+        />
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-500">
             WP.EXE GEOCAM
