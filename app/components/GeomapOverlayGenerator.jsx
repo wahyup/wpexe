@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
+import AnimatedTitle from 'AnimatedTitle'; // sesuaikan path
+
+
 // SVG Icons for clean, zero-dependency rendering
 const CameraIcon = () => (
   <svg className="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -599,9 +602,10 @@ export default function GeomapOverlayGenerator() {
           <h1 className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-500">
             WP.EXE GEOCAM
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Minimal push rank !!!!
-          </p>
+          <AnimatedTitle
+  text="Minimal Push Rank !!!"
+  className="text-2xl md:text-3xl font-extrabold"
+/>
         </div>
       </header>
 
