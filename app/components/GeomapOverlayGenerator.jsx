@@ -597,10 +597,10 @@ export default function GeomapOverlayGenerator() {
       <header className="max-w-7xl mx-auto mb-8 flex flex-col items-center justify-center text-center border-b border-slate-800 pb-5">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-500">
-            WP.EXE GEOMAP GENERATOR
+            WP.EXE GEOCAM
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            
+            Minimal push rank !!!!
           </p>
         </div>
       </header>
@@ -654,25 +654,7 @@ export default function GeomapOverlayGenerator() {
             />
           </div>
 
-          {/* 2. Thumbnail Photo Picker */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-300 mb-2">2. Foto Thumbnail (Map / Lokasi Sekunder)</label>
-            <button
-              type="button"
-              onClick={() => thumbInputRef.current?.click()}
-              className="w-full p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition flex items-center justify-center cursor-pointer"
-            >
-              <UploadIcon /> Pilih Gambar Thumbnail
-            </button>
-            <input
-              ref={thumbInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => handleImageChange(e, 'thumb')}
-            />
-          </div>
-
+          
           {/* 3. Title Input */}
           <div>
             <label className="block text-sm font-semibold text-slate-300 mb-1">3. Judul / Nama Proyek</label>
