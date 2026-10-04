@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
-import AnimatedTitle from 'AnimatedTitle'; // sesuaikan path
+import AnimatedTitle from './AnimatedTitle'; // sesuaikan path
 
 
 // SVG Icons for clean, zero-dependency rendering
