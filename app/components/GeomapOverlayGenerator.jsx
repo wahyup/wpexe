@@ -748,7 +748,7 @@ export default function GeomapOverlayGenerator() {
               className="w-full p-3 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-xl transition flex items-center justify-between cursor-pointer text-left"
             >
               <span>
-                <span className="block text-sm font-semibold text-slate-200">Setting Tema & Slide</span>
+                <span className="block text-sm font-semibold text-slate-200">Tema & Ukuran</span>
                 <span className="block text-[11px] text-slate-400 mt-0.5">
                   {THEME_OPTIONS.find((t) => t.value === themeColor)?.label || 'Custom'} • Scale {overlayScale}% • Opacity {cardOpacity}% • Radius {cardRadius}px
                 </span>
@@ -764,7 +764,7 @@ export default function GeomapOverlayGenerator() {
           <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col items-center sticky top-6">
             <div className="w-full flex justify-between items-center mb-3 px-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping mr-2"></span> Preview Canvas Stamping
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping mr-2"></span> Pratinjau
               </span>
               <span className="text-xs text-slate-500 font-mono">High Resolution Output</span>
             </div>
@@ -784,7 +784,7 @@ export default function GeomapOverlayGenerator() {
                 disabled={isProcessing}
                 className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 font-bold text-white rounded-xl shadow-lg shadow-emerald-950/50 transition duration-200 flex items-center justify-center active:scale-95 disabled:opacity-50 cursor-pointer"
               >
-                <DownloadIcon /> Simpan & Download Gambar
+                <DownloadIcon /> Download Gambar
               </button>
             </div>
             <p className="text-sm text-slate-400 mt-1">
