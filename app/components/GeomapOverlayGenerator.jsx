@@ -35,6 +35,54 @@ const DownloadIcon = () => (
   </svg>
 );
 
+const SettingsIcon = () => (
+  <svg className="w-4 h-4 inline-block mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+// Preset tema untuk menu Setting (warna swatch hanya untuk pratinjau tombol)
+const THEME_OPTIONS = [
+  { value: 'dark', label: 'Dark Modern', bg: '#0f172a', accent: '#34d399' },
+  { value: 'light', label: 'Light Clean', bg: '#ffffff', accent: '#0284c7' },
+  { value: 'amber', label: 'Amber Caution', bg: '#18181b', accent: '#f59e0b' },
+  { value: 'red', label: 'Emergency Red', bg: '#450a0a', accent: '#f87171' },
+  { value: 'emerald', label: 'Field Emerald', bg: '#064e3b', accent: '#34d399' },
+  { value: 'cyber', label: 'Cyber Neon', bg: '#0f0720', accent: '#06b6d4' },
+  { value: 'blueprint', label: 'Blueprint', bg: '#0a2540', accent: '#38bdf8' },
+  { value: 'glass', label: 'Frost Glass', bg: '#64748b', accent: '#ffffff' },
+];
+
+const POSITION_OPTIONS = [
+  { value: 'top-left', label: '↖ Kiri Atas' },
+  { value: 'top-right', label: '↗ Kanan Atas' },
+  { value: 'bottom-left', label: '↙ Kiri Bawah' },
+  { value: 'bottom-right', label: '↘ Kanan Bawah' },
+];
+
+const SETTINGS_KEY = 'geomap-overlay-settings-v1';
+const DEFAULT_SETTINGS = {
+  overlayPosition: 'bottom-left',
+  themeColor: 'dark',
+  overlayScale: 205,
+  cardOpacity: 85,
+  cardRadius: 12,
+  customBgColor: '#0f172a',
+  customTextColor: '#ffffff',
+  customAccentColor: '#38bdf8',
+  showThumb: true,
+  thumbSize: 110,
+  thumbShape: 'rounded', // 'rounded' | 'square' | 'circle'
+  thumbFit: 'cover', // 'cover' | 'contain'
+};
+
 // Helper function to convert HEX color to RGBA
 const hexToRgba = (hex, alpha) => {
   let c = hex.replace('#', '');
@@ -117,6 +165,17 @@ export default function GeomapOverlayGenerator() {
   const [customTextColor, setCustomTextColor] = useState('#ffffff');
   const [customAccentColor, setCustomAccentColor] = useState('#38bdf8');
 
+  // Menu Setting (tema & slide)
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState('tema'); // 'tema' | 'slide'
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  // Custom thumbnail
+  const [showThumb, setShowThumb] = useState(DEFAULT_SETTINGS.showThumb);
+  const [thumbSizeSetting, setThumbSizeSetting] = useState(DEFAULT_SETTINGS.thumbSize);
+  const [thumbShape, setThumbShape] = useState(DEFAULT_SETTINGS.thumbShape);
+  const [thumbFit, setThumbFit] = useState(DEFAULT_SETTINGS.thumbFit);
+
   const [isLocating, setIsLocating] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -128,6 +187,67 @@ export default function GeomapOverlayGenerator() {
     setMainImage(createSampleImage('Pilih / Ambil Foto Utama', '#1e293b', '#cbd5e1'));
     setThumbImage('/peta-default.jpg'); // Thumbnail peta default
   }, []);
+
+  // Muat setting yang tersimpan di perangkat
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (raw) {
+        const saved = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+        setOverlayPosition(saved.overlayPosition);
+        setThemeColor(saved.themeColor);
+        setOverlayScale(Number(saved.overlayScale));
+        setCardOpacity(Number(saved.cardOpacity));
+        setCardRadius(Number(saved.cardRadius));
+        setCustomBgColor(saved.customBgColor);
+        setCustomTextColor(saved.customTextColor);
+        setCustomAccentColor(saved.customAccentColor);
+        setShowThumb(Boolean(saved.showThumb));
+        setThumbSizeSetting(Number(saved.thumbSize));
+        setThumbShape(saved.thumbShape);
+        setThumbFit(saved.thumbFit);
+      }
+    } catch (e) {
+      console.warn('Gagal memuat setting:', e);
+    }
+    setSettingsLoaded(true);
+  }, []);
+
+  // Simpan setiap perubahan setting
+  useEffect(() => {
+    if (!settingsLoaded) return;
+    try {
+      localStorage.setItem(
+        SETTINGS_KEY,
+        JSON.stringify({
+          showThumb, thumbSize: thumbSizeSetting, thumbShape, thumbFit,
+          overlayPosition, themeColor, overlayScale, cardOpacity, cardRadius,
+          customBgColor, customTextColor, customAccentColor,
+        })
+      );
+    } catch (e) {
+      console.warn('Gagal menyimpan setting:', e);
+    }
+  }, [
+    settingsLoaded, overlayPosition, themeColor, overlayScale, cardOpacity, cardRadius,
+    showThumb, thumbSizeSetting, thumbShape, thumbFit,
+    customBgColor, customTextColor, customAccentColor,
+  ]);
+
+  const handleResetSettings = () => {
+    setOverlayPosition(DEFAULT_SETTINGS.overlayPosition);
+    setThemeColor(DEFAULT_SETTINGS.themeColor);
+    setOverlayScale(DEFAULT_SETTINGS.overlayScale);
+    setCardOpacity(DEFAULT_SETTINGS.cardOpacity);
+    setCardRadius(DEFAULT_SETTINGS.cardRadius);
+    setCustomBgColor(DEFAULT_SETTINGS.customBgColor);
+    setCustomTextColor(DEFAULT_SETTINGS.customTextColor);
+    setCustomAccentColor(DEFAULT_SETTINGS.customAccentColor);
+    setShowThumb(DEFAULT_SETTINGS.showThumb);
+    setThumbSizeSetting(DEFAULT_SETTINGS.thumbSize);
+    setThumbShape(DEFAULT_SETTINGS.thumbShape);
+    setThumbFit(DEFAULT_SETTINGS.thumbFit);
+  };
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -199,7 +319,7 @@ export default function GeomapOverlayGenerator() {
 
     // Load Thumbnail Image
     let imgThumb = null;
-    if (thumbImage) {
+    if (thumbImage && showThumb) {
       imgThumb = new Image();
       imgThumb.crossOrigin = 'anonymous';
       imgThumb.src = thumbImage;
@@ -213,7 +333,7 @@ export default function GeomapOverlayGenerator() {
     const scale = (canvas.width / 1200) * (overlayScale / 100);
     const padding = 24 * scale;
     const overlayWidth = Math.min(canvas.width * 0.95, 540 * scale);
-    const thumbSize = 110 * scale;
+    const thumbSize = (showThumb ? thumbSizeSetting : 0) * scale;
     const cardPadding = 16 * scale;
     const alphaVal = cardOpacity / 100;
 
@@ -331,24 +451,44 @@ export default function GeomapOverlayGenerator() {
     const thumbX = x + cardPadding;
     const thumbY = y + cardPadding;
 
-    if (imgThumb && imgThumb.complete && imgThumb.naturalWidth > 0) {
+    const drawThumb = !!(imgThumb && imgThumb.complete && imgThumb.naturalWidth > 0);
+    if (drawThumb) {
+      const thumbR =
+        thumbShape === 'circle' ? thumbSize / 2
+        : thumbShape === 'square' ? 0
+        : Math.max(4, cardRadius - 4) * scale;
+
       ctx.save();
       ctx.beginPath();
-      ctx.roundRect(thumbX, thumbY, thumbSize, thumbSize, Math.max(4, cardRadius - 4) * scale);
+      ctx.roundRect(thumbX, thumbY, thumbSize, thumbSize, thumbR);
       ctx.clip();
-      ctx.drawImage(imgThumb, thumbX, thumbY, thumbSize, thumbSize);
+
+      const iw = imgThumb.naturalWidth;
+      const ih = imgThumb.naturalHeight;
+      if (thumbFit === 'contain') {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.fillRect(thumbX, thumbY, thumbSize, thumbSize);
+        const ratio = Math.min(thumbSize / iw, thumbSize / ih);
+        const dw = iw * ratio;
+        const dh = ih * ratio;
+        ctx.drawImage(imgThumb, thumbX + (thumbSize - dw) / 2, thumbY + (thumbSize - dh) / 2, dw, dh);
+      } else {
+        // Crop tengah supaya gambar tidak gepeng
+        const side = Math.min(iw, ih);
+        ctx.drawImage(imgThumb, (iw - side) / 2, (ih - side) / 2, side, side, thumbX, thumbY, thumbSize, thumbSize);
+      }
       ctx.restore();
 
       // Border for thumbnail
       ctx.beginPath();
-      ctx.roundRect(thumbX, thumbY, thumbSize, thumbSize, Math.max(4, cardRadius - 4) * scale);
+      ctx.roundRect(thumbX, thumbY, thumbSize, thumbSize, thumbR);
       ctx.lineWidth = 2 * scale;
       ctx.strokeStyle = accentColor;
       ctx.stroke();
     }
 
     // 4. Draw Overlay Text Stack
-    const textX = imgThumb ? thumbX + thumbSize + (14 * scale) : x + cardPadding;
+    const textX = drawThumb ? thumbX + thumbSize + (14 * scale) : x + cardPadding;
     const maxTextWidth = overlayWidth - (textX - x) - cardPadding;
 
     // Title
@@ -412,6 +552,7 @@ export default function GeomapOverlayGenerator() {
     renderCanvas();
   }, [
     mainImage, thumbImage, title, address, coordinates, date, time, timezone,
+    showThumb, thumbSizeSetting, thumbShape, thumbFit,
     overlayPosition, themeColor, overlayScale, cardOpacity, cardRadius,
     customBgColor, customTextColor, customAccentColor,
   ]);
@@ -469,9 +610,18 @@ export default function GeomapOverlayGenerator() {
 
         {/* Left Column: Control Panel */}
         <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl h-fit">
-          <h2 className="text-lg font-bold text-emerald-400 flex items-center border-b border-slate-800 pb-3">
-            <span className="w-2 h-2 bg-emerald-400 rounded-full mr-2"></span> Panel Pengaturan Overlay
-          </h2>
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h2 className="text-lg font-bold text-emerald-400 flex items-center">
+              <span className="w-2 h-2 bg-emerald-400 rounded-full mr-2"></span> Panel Overlay
+            </h2>
+            <button
+              type="button"
+              onClick={() => setShowSettings(true)}
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 transition flex items-center cursor-pointer"
+            >
+              <SettingsIcon /> Setting
+            </button>
+          </div>
 
           {/* 1. Main Photo Picker */}
           <div>
@@ -608,153 +758,21 @@ export default function GeomapOverlayGenerator() {
             </div>
           </div>
 
-          {/* Styling & Theme Options Section */}
-          <div className="pt-4 border-t border-slate-800 space-y-4">
-            <h3 className="text-sm font-bold text-teal-400 uppercase tracking-wider">
-              🎨 Tema & Desain Overlay
-            </h3>
-
-            {/* Select Theme Preset */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Pilih Tema Overlay
-              </label>
-              <select
-                value={themeColor}
-                onChange={(e) => setThemeColor(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 cursor-pointer"
-              >
-                <option value="dark">🌙 Dark Modern (Slate Gelap)</option>
-                <option value="light">☀️ Light Clean (Putih Minimalis)</option>
-                <option value="amber">⚠️ Amber Caution (Kuning Lapangan)</option>
-                <option value="red">🚨 Emergency Red (Merah Siaga)</option>
-                <option value="emerald">🌿 Field Emerald (Hijau Survey)</option>
-                <option value="cyber">⚡ Cyber Neon (Futuristik Pink/Cyan)</option>
-                <option value="blueprint">📐 Technical Blueprint (Biru Teknik)</option>
-                <option value="glass">❄️ Frost Glass (Transparan Frost)</option>
-                <option value="custom">⚙️ Kustomisasi Warna Manual (Custom)</option>
-              </select>
-            </div>
-
-            {/* Custom Theme Color Pickers (Visible when 'custom' theme selected) */}
-            {themeColor === 'custom' && (
-              <div className="p-3 bg-slate-950 border border-teal-500/30 rounded-xl space-y-3 animate-fadeIn">
-                <p className="text-[11px] text-teal-300 font-medium">Pilih Kombinasi Warna Manual:</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="block text-[10px] text-slate-400 mb-1">Background</label>
-                    <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 rounded-lg border border-slate-800">
-                      <input
-                        type="color"
-                        value={customBgColor}
-                        onChange={(e) => setCustomBgColor(e.target.value)}
-                        className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
-                      />
-                      <span className="text-[10px] font-mono">{customBgColor}</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] text-slate-400 mb-1">Teks Alamat</label>
-                    <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 rounded-lg border border-slate-800">
-                      <input
-                        type="color"
-                        value={customTextColor}
-                        onChange={(e) => setCustomTextColor(e.target.value)}
-                        className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
-                      />
-                      <span className="text-[10px] font-mono">{customTextColor}</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] text-slate-400 mb-1">Aksen / Judul</label>
-                    <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 rounded-lg border border-slate-800">
-                      <input
-                        type="color"
-                        value={customAccentColor}
-                        onChange={(e) => setCustomAccentColor(e.target.value)}
-                        className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
-                      />
-                      <span className="text-[10px] font-mono">{customAccentColor}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Position Select */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Posisi Overlay</label>
-              <select
-                value={overlayPosition}
-                onChange={(e) => setOverlayPosition(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 cursor-pointer"
-              >
-                <option value="bottom-left">↙️ Kiri Bawah</option>
-                <option value="bottom-right">↘️ Kanan Bawah</option>
-                <option value="top-left">↖️ Kiri Atas</option>
-                <option value="top-right">↗️ Kanan Atas</option>
-              </select>
-            </div>
-
-            {/* Scale Slider */}
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-semibold text-slate-300">Ukuran Scale ({overlayScale}%)</label>
-                <button
-                  type="button"
-                  onClick={() => setOverlayScale(205)}
-                  className="text-[10px] text-slate-400 hover:text-emerald-400 transition cursor-pointer"
-                >
-                  Reset (205%)
-                </button>
-              </div>
-              <input
-                type="range"
-                min="50"
-                max="250"
-                step="5"
-                value={overlayScale}
-                onChange={(e) => setOverlayScale(Number(e.target.value))}
-                className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-              />
-            </div>
-
-            {/* Opacity Slider */}
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-semibold text-slate-300">Kejelasan / Transparansi ({cardOpacity}%)</label>
-                <span className="text-[10px] text-slate-400">{cardOpacity < 50 ? 'Transparan' : 'Pekat'}</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="100"
-                step="5"
-                value={cardOpacity}
-                onChange={(e) => setCardOpacity(Number(e.target.value))}
-                className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-500"
-              />
-            </div>
-
-            {/* Corner Radius Slider */}
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-semibold text-slate-300">Sudut Kelengkungan ({cardRadius}px)</label>
-                <span className="text-[10px] text-slate-400">{cardRadius === 0 ? 'Kotak' : 'Bulat'}</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="24"
-                step="2"
-                value={cardRadius}
-                onChange={(e) => setCardRadius(Number(e.target.value))}
-                className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-              />
-            </div>
-
+          {/* Ringkasan setting aktif + tombol buka menu Setting */}
+          <div className="pt-4 border-t border-slate-800">
+            <button
+              type="button"
+              onClick={() => setShowSettings(true)}
+              className="w-full p-3 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-xl transition flex items-center justify-between cursor-pointer text-left"
+            >
+              <span>
+                <span className="block text-sm font-semibold text-slate-200">Setting Tema & Slide</span>
+                <span className="block text-[11px] text-slate-400 mt-0.5">
+                  {THEME_OPTIONS.find((t) => t.value === themeColor)?.label || 'Custom'} • Scale {overlayScale}% • Opacity {cardOpacity}% • Radius {cardRadius}px
+                </span>
+              </span>
+              <SettingsIcon />
+            </button>
           </div>
 
         </div>
@@ -795,6 +813,349 @@ export default function GeomapOverlayGenerator() {
         
         
       </div>
+
+      {/* Menu Setting: Tema & Slide */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-stretch md:justify-end" role="dialog" aria-modal="true" aria-label="Setting tema dan slide">
+          {/* Backdrop tipis supaya preview tetap terlihat */}
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowSettings(false)} />
+
+          <div className="relative w-full md:w-[24rem] max-h-[78vh] md:max-h-full bg-slate-900 border border-slate-700 md:border-y-0 md:border-r-0 rounded-t-2xl md:rounded-none shadow-2xl flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-800">
+              <h3 className="text-base font-bold text-slate-100 flex items-center">
+                <SettingsIcon /> Setting
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowSettings(false)}
+                aria-label="Tutup setting"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition cursor-pointer"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="grid grid-cols-3 gap-1 p-1.5 mx-5 mt-4 bg-slate-950 rounded-xl border border-slate-800">
+              {[
+                { id: 'tema', label: 'Tema' },
+                { id: 'slide', label: 'Slide' },
+                { id: 'thumbnail', label: 'Thumbnail' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setSettingsTab(tab.id)}
+                  className={`py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    settingsTab === tab.id
+                      ? 'bg-emerald-500 text-slate-950'
+                      : 'text-slate-300 hover:bg-slate-800'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Isi tab */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+              {settingsTab === 'tema' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-2">Tema overlay</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {THEME_OPTIONS.map((t) => (
+                        <button
+                          key={t.value}
+                          type="button"
+                          onClick={() => setThemeColor(t.value)}
+                          aria-pressed={themeColor === t.value}
+                          className={`p-2 rounded-xl border text-left transition cursor-pointer flex items-center gap-2 ${
+                            themeColor === t.value
+                              ? 'border-emerald-400 bg-slate-800'
+                              : 'border-slate-700 bg-slate-950 hover:bg-slate-800'
+                          }`}
+                        >
+                          <span
+                            className="w-8 h-8 rounded-lg shrink-0 border-t-4"
+                            style={{ background: t.bg, borderTopColor: t.accent, borderColor: t.accent }}
+                          />
+                          <span className="text-[11px] font-medium text-slate-200 leading-tight">{t.label}</span>
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setThemeColor('custom')}
+                        aria-pressed={themeColor === 'custom'}
+                        className={`p-2 rounded-xl border text-left transition cursor-pointer flex items-center gap-2 col-span-2 ${
+                          themeColor === 'custom'
+                            ? 'border-emerald-400 bg-slate-800'
+                            : 'border-slate-700 bg-slate-950 hover:bg-slate-800'
+                        }`}
+                      >
+                        <span
+                          className="w-8 h-8 rounded-lg shrink-0 border-t-4"
+                          style={{ background: customBgColor, borderTopColor: customAccentColor, borderColor: customAccentColor }}
+                        />
+                        <span className="text-[11px] font-medium text-slate-200 leading-tight">Custom (pilih warna sendiri)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {themeColor === 'custom' && (
+                    <div className="p-3 bg-slate-950 border border-teal-500/30 rounded-xl space-y-3">
+                      <p className="text-[11px] text-teal-300 font-medium">Warna manual</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { label: 'Background', value: customBgColor, set: setCustomBgColor },
+                          { label: 'Teks alamat', value: customTextColor, set: setCustomTextColor },
+                          { label: 'Aksen / judul', value: customAccentColor, set: setCustomAccentColor },
+                        ].map((c) => (
+                          <div key={c.label}>
+                            <label className="block text-[10px] text-slate-400 mb-1">{c.label}</label>
+                            <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 rounded-lg border border-slate-800">
+                              <input
+                                type="color"
+                                value={c.value}
+                                onChange={(e) => c.set(e.target.value)}
+                                className="w-6 h-6 rounded cursor-pointer border-0 bg-transparent"
+                              />
+                              <span className="text-[10px] font-mono">{c.value}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {settingsTab === 'slide' && (
+                <>
+                  {/* Posisi */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-2">Posisi overlay</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {POSITION_OPTIONS.map((o) => (
+                        <button
+                          key={o.value}
+                          type="button"
+                          onClick={() => setOverlayPosition(o.value)}
+                          aria-pressed={overlayPosition === o.value}
+                          className={`py-2 rounded-xl border text-xs font-medium transition cursor-pointer ${
+                            overlayPosition === o.value
+                              ? 'border-emerald-400 bg-slate-800 text-emerald-300'
+                              : 'border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800'
+                          }`}
+                        >
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Scale */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-xs font-semibold text-slate-300">Ukuran scale ({overlayScale}%)</label>
+                      <button
+                        type="button"
+                        onClick={() => setOverlayScale(DEFAULT_SETTINGS.overlayScale)}
+                        className="text-[10px] text-slate-400 hover:text-emerald-400 transition cursor-pointer"
+                      >
+                        Reset ({DEFAULT_SETTINGS.overlayScale}%)
+                      </button>
+                    </div>
+                    <input
+                      type="range"
+                      min="50"
+                      max="250"
+                      step="5"
+                      value={overlayScale}
+                      onChange={(e) => setOverlayScale(Number(e.target.value))}
+                      className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    />
+                  </div>
+
+                  {/* Opacity */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-xs font-semibold text-slate-300">Transparansi ({cardOpacity}%)</label>
+                      <span className="text-[10px] text-slate-400">{cardOpacity < 50 ? 'Transparan' : 'Pekat'}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="100"
+                      step="5"
+                      value={cardOpacity}
+                      onChange={(e) => setCardOpacity(Number(e.target.value))}
+                      className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-teal-500"
+                    />
+                  </div>
+
+                  {/* Radius */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-xs font-semibold text-slate-300">Sudut kelengkungan ({cardRadius}px)</label>
+                      <span className="text-[10px] text-slate-400">{cardRadius === 0 ? 'Kotak' : 'Bulat'}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="24"
+                      step="2"
+                      value={cardRadius}
+                      onChange={(e) => setCardRadius(Number(e.target.value))}
+                      className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    />
+                  </div>
+                </>
+              )}
+
+              {settingsTab === 'thumbnail' && (
+                <>
+                  {/* Pratinjau + ganti gambar */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-24 h-24 shrink-0 rounded-xl bg-slate-950 border border-slate-700 overflow-hidden flex items-center justify-center">
+                      {thumbImage ? (
+                        <img src={thumbImage} alt="Thumbnail saat ini" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-[10px] text-slate-500 text-center px-2">Belum ada gambar</span>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => thumbInputRef.current?.click()}
+                        className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition flex items-center justify-center cursor-pointer"
+                      >
+                        <UploadIcon /> Ganti gambar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setThumbImage('/peta-default.jpg')}
+                        className="w-full py-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-xl text-xs font-medium text-slate-300 transition cursor-pointer"
+                      >
+                        Pakai gambar default
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Tampilkan / sembunyikan */}
+                  <div className="flex items-center justify-between p-3 bg-slate-950 border border-slate-700 rounded-xl">
+                    <span className="text-xs font-semibold text-slate-300">Tampilkan thumbnail di overlay</span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={showThumb}
+                      onClick={() => setShowThumb(!showThumb)}
+                      className={`relative w-10 h-6 rounded-full transition cursor-pointer ${showThumb ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${showThumb ? 'translate-x-4' : ''}`} />
+                    </button>
+                  </div>
+
+                  <div className={showThumb ? 'space-y-5' : 'space-y-5 opacity-40 pointer-events-none'}>
+                    {/* Bentuk */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-2">Bentuk</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { value: 'rounded', label: 'Bulat sudut' },
+                          { value: 'square', label: 'Kotak' },
+                          { value: 'circle', label: 'Lingkaran' },
+                        ].map((o) => (
+                          <button
+                            key={o.value}
+                            type="button"
+                            onClick={() => setThumbShape(o.value)}
+                            aria-pressed={thumbShape === o.value}
+                            className={`py-2 rounded-xl border text-[11px] font-medium transition cursor-pointer ${
+                              thumbShape === o.value
+                                ? 'border-emerald-400 bg-slate-800 text-emerald-300'
+                                : 'border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800'
+                            }`}
+                          >
+                            {o.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Cara mengisi */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300 mb-2">Cara mengisi gambar</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { value: 'cover', label: 'Penuh (crop tengah)' },
+                          { value: 'contain', label: 'Utuh (tanpa crop)' },
+                        ].map((o) => (
+                          <button
+                            key={o.value}
+                            type="button"
+                            onClick={() => setThumbFit(o.value)}
+                            aria-pressed={thumbFit === o.value}
+                            className={`py-2 rounded-xl border text-[11px] font-medium transition cursor-pointer ${
+                              thumbFit === o.value
+                                ? 'border-emerald-400 bg-slate-800 text-emerald-300'
+                                : 'border-slate-700 bg-slate-950 text-slate-300 hover:bg-slate-800'
+                            }`}
+                          >
+                            {o.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Ukuran */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-xs font-semibold text-slate-300">Ukuran thumbnail ({thumbSizeSetting}px)</label>
+                        <button
+                          type="button"
+                          onClick={() => setThumbSizeSetting(DEFAULT_SETTINGS.thumbSize)}
+                          className="text-[10px] text-slate-400 hover:text-emerald-400 transition cursor-pointer"
+                        >
+                          Reset ({DEFAULT_SETTINGS.thumbSize}px)
+                        </button>
+                      </div>
+                      <input
+                        type="range"
+                        min="60"
+                        max="180"
+                        step="5"
+                        value={thumbSizeSetting}
+                        onChange={(e) => setThumbSizeSetting(Number(e.target.value))}
+                        className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="grid grid-cols-2 gap-2 px-5 py-4 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={handleResetSettings}
+                className="py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition cursor-pointer"
+              >
+                Reset semua
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSettings(false)}
+                className="py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl text-xs font-bold text-white transition cursor-pointer"
+              >
+                Selesai
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
