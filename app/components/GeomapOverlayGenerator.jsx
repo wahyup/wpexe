@@ -75,7 +75,7 @@ const DEFAULT_SETTINGS = {
   overlayPosition: 'bottom-left',
   themeColor: 'dark',
   overlayScale: 205,
-  cardOpacity: 85,
+  cardOpacity: 25,
   cardRadius: 12,
   customBgColor: '#0f172a',
   customTextColor: '#ffffff',
