@@ -84,6 +84,7 @@ const DEFAULT_SETTINGS = {
   thumbSize: 110,
   thumbShape: 'rounded', // 'rounded' | 'square' | 'circle'
   thumbFit: 'cover', // 'cover' | 'contain'
+  layoutStyle: 'card', // 'card' | 'timestamp'
 };
 
 // Helper function to convert HEX color to RGBA
@@ -107,6 +108,28 @@ const formatIndonesianDate = (dateStr) => {
     month: 'long',
     year: 'numeric',
   });
+};
+
+// Format tanggal untuk template Timestamp: "15 Oktober 2026" + hari "Kamis"
+const formatTimestampDate = (dateStr) => {
+  if (!dateStr) return { dateText: '', dayText: '' };
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return { dateText: dateStr, dayText: '' };
+  const [year, month, day] = parts;
+  const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+  return {
+    dateText: dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+    dayText: dateObj.toLocaleDateString('id-ID', { weekday: 'long' }),
+  };
+};
+
+// Ubah "-5.365792, 105.145480 (78m Alt)" menjadi "5.365792°S, 105.145480°E"
+const formatCoordLabel = (coordStr) => {
+  const m = (coordStr || '').match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+  if (!m) return coordStr || '';
+  const lat = parseFloat(m[1]);
+  const lng = parseFloat(m[2]);
+  return `${Math.abs(lat).toFixed(6)}°${lat < 0 ? 'S' : 'N'}, ${Math.abs(lng).toFixed(6)}°${lng < 0 ? 'W' : 'E'}`;
 };
 
 // Default sample SVG pattern for initial image state
@@ -155,6 +178,8 @@ export default function GeomapOverlayGenerator() {
   const [date, setDate] = useState(defaultDate);
   const [time, setTime] = useState(defaultTime);
   const [timezone, setTimezone] = useState('WIB'); // 'WIB', 'WITA', 'WIT', 'UTC'
+  const [activity, setActivity] = useState("Jum'at Bersih"); // dipakai template Timestamp
+  const [layoutStyle, setLayoutStyle] = useState(DEFAULT_SETTINGS.layoutStyle); // 'card' | 'timestamp'
 
   // Overlay Layout & Styling States
   const [overlayPosition, setOverlayPosition] = useState('bottom-left'); // 'bottom-left', 'bottom-right', 'top-left', 'top-right'
@@ -170,7 +195,7 @@ export default function GeomapOverlayGenerator() {
 
   // Menu Setting (tema & slide)
   const [showSettings, setShowSettings] = useState(false);
-  const [settingsTab, setSettingsTab] = useState('tema'); // 'tema' | 'slide'
+  const [settingsTab, setSettingsTab] = useState('template'); // 'template' | 'tema' | 'slide' | 'thumbnail'
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   // Custom thumbnail
@@ -209,6 +234,7 @@ export default function GeomapOverlayGenerator() {
         setThumbSizeSetting(Number(saved.thumbSize));
         setThumbShape(saved.thumbShape);
         setThumbFit(saved.thumbFit);
+        setLayoutStyle(saved.layoutStyle);
       }
     } catch (e) {
       console.warn('Gagal memuat setting:', e);
@@ -223,7 +249,7 @@ export default function GeomapOverlayGenerator() {
       localStorage.setItem(
         SETTINGS_KEY,
         JSON.stringify({
-          showThumb, thumbSize: thumbSizeSetting, thumbShape, thumbFit,
+          showThumb, thumbSize: thumbSizeSetting, thumbShape, thumbFit, layoutStyle,
           overlayPosition, themeColor, overlayScale, cardOpacity, cardRadius,
           customBgColor, customTextColor, customAccentColor,
         })
@@ -233,7 +259,7 @@ export default function GeomapOverlayGenerator() {
     }
   }, [
     settingsLoaded, overlayPosition, themeColor, overlayScale, cardOpacity, cardRadius,
-    showThumb, thumbSizeSetting, thumbShape, thumbFit,
+    showThumb, thumbSizeSetting, thumbShape, thumbFit, layoutStyle,
     customBgColor, customTextColor, customAccentColor,
   ]);
 
@@ -250,6 +276,7 @@ export default function GeomapOverlayGenerator() {
     setThumbSizeSetting(DEFAULT_SETTINGS.thumbSize);
     setThumbShape(DEFAULT_SETTINGS.thumbShape);
     setThumbFit(DEFAULT_SETTINGS.thumbFit);
+    setLayoutStyle(DEFAULT_SETTINGS.layoutStyle);
   };
 
   const handleGetLocation = () => {
@@ -430,6 +457,179 @@ export default function GeomapOverlayGenerator() {
         break;
     }
 
+    // ===== Template "Timestamp": thumbnail peta, jam besar, alamat, kotak info =====
+    if (layoutStyle === 'timestamp') {
+      const u = scale;
+      const ff = 'Inter, "Helvetica Neue", Arial, sans-serif';
+      const padEdge = 24 * u;
+      const boxW = Math.min(canvas.width - padEdge * 2, 340 * u);
+      const addrW = Math.min(canvas.width - padEdge * 2, 400 * u);
+      const blockW = Math.max(boxW, addrW);
+      const hasThumb = !!(imgThumb && imgThumb.complete && imgThumb.naturalWidth > 0);
+      const T = hasThumb ? thumbSize * 1.25 : 0;
+      const isTop = overlayPosition.includes('top');
+      const x0 = overlayPosition.includes('right') ? canvas.width - padEdge - blockW : padEdge;
+
+      // Hitung baris alamat (maks 3 baris)
+      ctx.font = `${22 * u}px ${ff}`;
+      const addrLines = (() => {
+        const words = (address || '').split(' ').filter(Boolean);
+        const lines = [];
+        let cur = '';
+        words.forEach((w) => {
+          const test = cur ? `${cur} ${w}` : w;
+          if (ctx.measureText(test).width > addrW && cur) {
+            lines.push(cur);
+            cur = w;
+          } else {
+            cur = test;
+          }
+        });
+        if (cur) lines.push(cur);
+        if (lines.length > 3) {
+          const cut = lines.slice(0, 3);
+          cut[2] += '…';
+          return cut;
+        }
+        return lines;
+      })();
+
+      // Baris di dalam kotak info
+      const rows = [
+        title ? title.toUpperCase() : '',
+        coordinates ? `Koordinat: ${formatCoordLabel(coordinates)}` : '',
+        activity ? `Kegiatan: ${activity}` : '',
+      ].filter(Boolean);
+
+      const thumbBlock = hasThumb ? T + 16 * u : 0;
+      const timeBlock = 74 * u;
+      const addrBlock = addrLines.length * 30 * u + 10 * u;
+      const boxH = rows.length ? 28 * u + rows.length * 36 * u : 0;
+      const boxBlock = rows.length ? boxH + 14 * u : 0;
+      const totalH = thumbBlock + timeBlock + addrBlock + boxBlock + 2 * u;
+      const y0 = isTop ? padEdge : canvas.height - padEdge - totalH;
+
+      // Scrim gelap tipis supaya teks tetap terbaca di foto terang
+      const scrimH = totalH + padEdge * 2.5;
+      const grad = isTop
+        ? ctx.createLinearGradient(0, 0, 0, scrimH)
+        : ctx.createLinearGradient(0, canvas.height, 0, canvas.height - scrimH);
+      grad.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.save();
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, isTop ? 0 : canvas.height - scrimH, canvas.width, scrimH);
+      ctx.restore();
+
+      let cy = y0;
+
+      // 1. Thumbnail peta
+      if (hasThumb) {
+        const thumbR =
+          thumbShape === 'circle' ? T / 2
+          : thumbShape === 'square' ? 0
+          : Math.max(4, cardRadius) * u;
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(x0, cy, T, T, thumbR);
+        ctx.clip();
+        const iw = imgThumb.naturalWidth;
+        const ih = imgThumb.naturalHeight;
+        if (thumbFit === 'contain') {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+          ctx.fillRect(x0, cy, T, T);
+          const ratio = Math.min(T / iw, T / ih);
+          ctx.drawImage(imgThumb, x0 + (T - iw * ratio) / 2, cy + (T - ih * ratio) / 2, iw * ratio, ih * ratio);
+        } else {
+          const side = Math.min(iw, ih);
+          ctx.drawImage(imgThumb, (iw - side) / 2, (ih - side) / 2, side, side, x0, cy, T, T);
+        }
+        ctx.restore();
+        ctx.beginPath();
+        ctx.roundRect(x0, cy, T, T, thumbR);
+        ctx.lineWidth = 1.5 * u;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.stroke();
+        cy += T + 16 * u;
+      }
+
+      // Bayangan lembut untuk teks polos
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+      ctx.shadowBlur = 4 * u;
+      ctx.fillStyle = textColorPrimary;
+      ctx.textBaseline = 'alphabetic';
+
+      // 2. Jam besar (dipipihkan agar mirip font condensed) + garis vertikal + tanggal/hari
+      const timeText = (time || '').slice(0, 5);
+      const squeeze = 0.8;
+      ctx.font = `bold ${78 * u}px ${ff}`;
+      const timeW = ctx.measureText(timeText).width * squeeze;
+      ctx.save();
+      ctx.translate(x0, cy + 56 * u);
+      ctx.scale(squeeze, 1);
+      ctx.fillText(timeText, 0, 0);
+      ctx.restore();
+
+      const barX = x0 + timeW + 16 * u;
+      ctx.save();
+      ctx.shadowColor = 'transparent';
+      ctx.fillStyle = themeColor === 'dark' ? '#fbbf24' : accentColor;
+      ctx.fillRect(barX, cy - 2 * u, 3 * u, 62 * u);
+      ctx.restore();
+
+      const { dateText, dayText } = formatTimestampDate(date);
+      ctx.font = `${22 * u}px ${ff}`;
+      ctx.fillText(dateText, barX + 16 * u, cy + 22 * u);
+      ctx.fillText(dayText, barX + 16 * u, cy + 54 * u);
+      cy += timeBlock;
+
+      // 3. Alamat
+      ctx.font = `${22 * u}px ${ff}`;
+      addrLines.forEach((l, i) => ctx.fillText(l, x0, cy + 22 * u + i * 30 * u));
+      cy += addrBlock;
+      ctx.restore();
+
+      // 4. Kotak info (judul, koordinat, kegiatan)
+      if (rows.length) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(x0, cy, boxW, boxH, cardRadius * u);
+        ctx.fillStyle = bgStyle;
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.fillStyle = textColorPrimary;
+        ctx.textBaseline = 'middle';
+        const textMaxW = boxW - 32 * u;
+        rows.forEach((r, i) => {
+          let size = 22 * u;
+          ctx.font = `${size}px ${ff}`;
+          while (ctx.measureText(r).width > textMaxW && size > 22 * u * 0.6) {
+            size -= 0.5 * u;
+            ctx.font = `${size}px ${ff}`;
+          }
+          ctx.fillText(r, x0 + 16 * u, cy + 14 * u + 18 * u + i * 36 * u);
+        });
+        ctx.restore();
+        cy += boxH + 14 * u;
+      }
+
+      // 5. Garis tipis penutup
+      ctx.save();
+      ctx.beginPath();
+      ctx.lineWidth = 1.5 * u;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.moveTo(x0, cy);
+      ctx.lineTo(x0 + boxW * 0.85, cy);
+      ctx.stroke();
+      ctx.restore();
+
+      setIsProcessing(false);
+      return;
+    }
+
     // 2. Draw Card Container with Glassmorphism / Solid Theme Background
     ctx.save();
     ctx.beginPath();
@@ -554,8 +754,8 @@ export default function GeomapOverlayGenerator() {
   useEffect(() => {
     renderCanvas();
   }, [
-    mainImage, thumbImage, title, address, coordinates, date, time, timezone,
-    showThumb, thumbSizeSetting, thumbShape, thumbFit,
+    mainImage, thumbImage, title, address, coordinates, date, time, timezone, activity,
+    showThumb, thumbSizeSetting, thumbShape, thumbFit, layoutStyle,
     overlayPosition, themeColor, overlayScale, cardOpacity, cardRadius,
     customBgColor, customTextColor, customAccentColor,
   ]);
@@ -671,6 +871,20 @@ export default function GeomapOverlayGenerator() {
             />
           </div>
 
+          {/* Kegiatan (template Timestamp) */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-300 mb-1">
+              Kegiatan <span className="text-[11px] font-normal text-slate-500">(tampil di template Timestamp)</span>
+            </label>
+            <input
+              type="text"
+              value={activity}
+              onChange={(e) => setActivity(e.target.value)}
+              placeholder="Contoh: Jum'at Bersih"
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 transition"
+            />
+          </div>
+
           {/* 4. Address Input & GPS Auto Button */}
           <div>
             <div className="flex justify-between items-center mb-1">
@@ -754,7 +968,7 @@ export default function GeomapOverlayGenerator() {
               <span>
                 <span className="block text-sm font-semibold text-slate-200">Tema & Ukuran</span>
                 <span className="block text-[11px] text-slate-400 mt-0.5">
-                  {THEME_OPTIONS.find((t) => t.value === themeColor)?.label || 'Custom'} • Scale {overlayScale}% • Opacity {cardOpacity}% • Radius {cardRadius}px
+                  {layoutStyle === 'timestamp' ? 'Timestamp' : 'Kartu'} • {THEME_OPTIONS.find((t) => t.value === themeColor)?.label || 'Custom'} • Scale {overlayScale}% • Opacity {cardOpacity}% • Radius {cardRadius}px
                 </span>
               </span>
               <SettingsIcon />
@@ -825,8 +1039,9 @@ export default function GeomapOverlayGenerator() {
             </div>
 
             {/* Tabs */}
-            <div className="grid grid-cols-3 gap-1 p-1.5 mx-5 mt-4 bg-slate-950 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-4 gap-1 p-1.5 mx-5 mt-4 bg-slate-950 rounded-xl border border-slate-800">
               {[
+                { id: 'template', label: 'Template' },
                 { id: 'tema', label: 'Tema' },
                 { id: 'slide', label: 'Slide' },
                 { id: 'thumbnail', label: 'Thumbnail' },
@@ -835,7 +1050,7 @@ export default function GeomapOverlayGenerator() {
                   key={tab.id}
                   type="button"
                   onClick={() => setSettingsTab(tab.id)}
-                  className={`py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  className={`py-2 rounded-lg text-[11px] font-semibold transition cursor-pointer ${
                     settingsTab === tab.id
                       ? 'bg-emerald-500 text-slate-950'
                       : 'text-slate-300 hover:bg-slate-800'
@@ -848,6 +1063,41 @@ export default function GeomapOverlayGenerator() {
 
             {/* Isi tab */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+              {settingsTab === 'template' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-2">Template tampilan</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { value: 'card', label: 'Kartu', desc: 'Thumbnail + teks dalam satu kartu' },
+                        { value: 'timestamp', label: 'Timestamp', desc: 'Jam besar, alamat, kotak info' },
+                      ].map((o) => (
+                        <button
+                          key={o.value}
+                          type="button"
+                          onClick={() => setLayoutStyle(o.value)}
+                          aria-pressed={layoutStyle === o.value}
+                          className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                            layoutStyle === o.value
+                              ? 'border-emerald-400 bg-slate-800'
+                              : 'border-slate-700 bg-slate-950 hover:bg-slate-800'
+                          }`}
+                        >
+                          <span className="block text-xs font-semibold text-slate-100">{o.label}</span>
+                          <span className="block text-[10px] text-slate-400 mt-1 leading-snug">{o.desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {layoutStyle === 'timestamp' && (
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Jam diambil dari kolom Jam, tanggal & hari dari kolom Tanggal, dan baris Kegiatan dari kolom Kegiatan.
+                      Atur transparansi kotak di tab Slide, ukuran peta di tab Thumbnail.
+                    </p>
+                  )}
+                </>
+              )}
+
               {settingsTab === 'tema' && (
                 <>
                   <div>
