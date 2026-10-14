@@ -167,7 +167,9 @@ const createSampleImage = (text, bg, fg) => {
 
 export default function GeomapOverlayGenerator() {
   const now = new Date();
-  const defaultDate = now.toISOString().split('T')[0];
+  // Pakai waktu lokal perangkat (toISOString memakai UTC sehingga tanggal bisa mundur 1 hari)
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const defaultDate = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
   const defaultTime = now.toTimeString().split(' ')[0]; // HH:mm:ss (dengan detik)
 
   const [mainImage, setMainImage] = useState(null);
