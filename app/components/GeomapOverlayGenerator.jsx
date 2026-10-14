@@ -74,17 +74,17 @@ const SETTINGS_KEY = 'geomap-overlay-settings-v1';
 const DEFAULT_SETTINGS = {
   overlayPosition: 'bottom-left',
   themeColor: 'dark',
-  overlayScale: 205,
+  overlayScale: 160,
   cardOpacity: 25,
   cardRadius: 12,
   customBgColor: '#0f172a',
   customTextColor: '#ffffff',
   customAccentColor: '#38bdf8',
   showThumb: true,
-  thumbSize: 110,
+  thumbSize: 150,
   thumbShape: 'rounded', // 'rounded' | 'square' | 'circle'
   thumbFit: 'cover', // 'cover' | 'contain'
-  layoutStyle: 'card', // 'card' | 'timestamp'
+  layoutStyle: 'timestamp', // 'card' | 'timestamp'
 };
 
 // Helper function to convert HEX color to RGBA
